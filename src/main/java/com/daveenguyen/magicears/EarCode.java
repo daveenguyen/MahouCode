@@ -59,24 +59,24 @@ public class EarCode {
     /**
      * Generates the IR toggle pattern from given hex code.
      *
-     * @param code  the hex code without CRC at the end.
-     * @param isNew the flag to indicate if using Android 4.4.3 or newer.
+     * @param code   the hex code.
+     * @param addCrc adds CRC calculation. Pass false if code includes the CRC.
      */
-    public EarCode(String code, boolean isNew) {
-        this(code, isNew, true);
+    public EarCode(String code, boolean addCrc) {
+        this(code, addCrc, true);
     }
 
     /**
      * Generates the IR toggle pattern from given hex code.
      *
      * @param code   the hex code.
-     * @param isNew  the flag to indicate if using Android 4.4.3 or newer.
      * @param addCrc adds CRC calculation. Pass false if code includes the CRC.
+     * @param isNew  the flag to indicate if using Android 4.4.3 or newer.
      */
-    public EarCode(String code, boolean isNew, boolean addCrc) {
+    public EarCode(String code, boolean addCrc, boolean isNew) {
         List<Integer> patternList;
 
-        patternList = generatePattern(code, isNew, addCrc);
+        patternList = generatePattern(code, addCrc, isNew);
         carrierFrequency = (int) CARRIER_FREQUENCY;
         pattern = convertIntegers(patternList);
     }
@@ -118,11 +118,11 @@ public class EarCode {
      * terms of pulse.
      *
      * @param code   the hex code string.
-     * @param isNew  the flag to indicate if using Android 4.4.3 or newer.
      * @param addCrc adds crc calculation if true.
+     * @param isNew  the flag to indicate if using Android 4.4.3 or newer.
      * @return the toggle pattern in terms based on isNew.
      */
-    private List<Integer> generatePattern(String code, boolean isNew, boolean addCrc) {
+    private List<Integer> generatePattern(String code, boolean addCrc, boolean isNew) {
         // If API is new (>= 4.4.3), calculate microseconds per bit, else calculate pulse per bit.
         float multiplier = (isNew) ? (MICROSEC_PER_SEC / BAUD_RATE) : (CARRIER_FREQUENCY / BAUD_RATE);
 
