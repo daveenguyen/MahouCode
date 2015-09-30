@@ -7,7 +7,24 @@ The pattern generated is ready for Android's infrared transmitter API.
 [ConsumerIrManager.transmit](https://developer.android.com/reference/android/hardware/ConsumerIrManager.html#transmit(int,%20int%5B%5D))
 
 
+## Usage
+
+### Gradle
+
+``` gradle
+repositories {
+  jcenter()
+  maven { url "https://jitpack.io" }
+}
+
+dependencies {
+  compile 'com.github.daveenguyen:magicears:-SNAPSHOT'
+}
+```
+
+
 ## Example
+
 ``` java
 import com.daveenguyen.magicears.EarCode;
 import java.util.Arrays;
