@@ -1,4 +1,5 @@
 # MagicEars
+[![Build Status](https://travis-ci.org/daveenguyen/MagicEars.svg)](https://travis-ci.org/daveenguyen/MagicEars)
 
 The purpose of this project is to calculate the transmit pattern from GwtS/MwM hex codes.
 
