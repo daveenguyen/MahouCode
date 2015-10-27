@@ -23,15 +23,23 @@ artifacts {
 
 // To specify a license in the pom:
 install {
-  repositories.mavenInstaller {
-    pom.project {
-      licenses {
-        license {
-          name 'MIT license'
-          url 'http://opensource.org/licenses/MIT'
-          distribution 'repo'
+    repositories.mavenInstaller {
+        pom.project {
+            licenses {
+                license {
+                    name 'MIT license'
+                    url 'http://opensource.org/licenses/MIT'
+                    distribution 'repo'
+                }
+            }
         }
-      }
     }
-  }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    testCompile 'junit:junit:4.12'
 }
