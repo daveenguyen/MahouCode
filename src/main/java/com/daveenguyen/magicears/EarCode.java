@@ -233,4 +233,12 @@ public class EarCode {
 
         return crc;
     }
+
+    public int[] getOldApiPattern() {
+        return new int[0];
+    }
+
+    public String getCode() {
+        return null;
+    }
 }
