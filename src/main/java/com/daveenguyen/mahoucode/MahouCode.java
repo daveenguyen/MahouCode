@@ -1,13 +1,14 @@
-package com.daveenguyen.magicears;
+package com.daveenguyen.mahoucode;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class EarCode {
-    private final float CARRIER_FREQUENCY = 38005f;
-    private final float BAUD_RATE = 2400f;
-    private final float MICROSEC_PER_SEC = 1000000f;
-    private final int[] CRC_TABLE = {
+/**
+ * The MahouCode class takes a string of MwM/GwtS hex code and
+ * calculates the pattern needed by Android IR API.
+ */
+public class MahouCode {
+    private static final int[] CRC_TABLE = {
             0x00, 0x5E, 0xBC, 0xE2, 0x61, 0x3F, 0xDD, 0x83,
             0xC2, 0x9C, 0x7E, 0x20, 0xA3, 0xFD, 0x1F, 0x41,
             0x9D, 0xC3, 0x21, 0x7F, 0xFC, 0xA2, 0x40, 0x1E,
@@ -41,53 +42,128 @@ public class EarCode {
             0x74, 0x2A, 0xC8, 0x96, 0x15, 0x4B, 0xA9, 0xF7,
             0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
     };
+
+    private final float CARRIER_FREQUENCY = 38005f;
+    private final float BAUD_RATE = 2400f;
+    private final float MICROSEC_PER_SEC = 1000000f;
     private final int START_BIT = 0;
     private final int STOP_BIT = 1;
-    private int carrierFrequency; // The IR carrier frequency in hertz.
-    private int[] pattern; // The toggle pattern in microseconds to transmit.
-
-
-    /**
-     * Generates the IR toggle pattern from given hex code for Android 4.4.3 or newer.
-     *
-     * @param code the hex code without CRC at the end.
-     */
-    public EarCode(String code) {
-        this(code, true, true);
-    }
+    private final int carrierFrequency; // The IR carrier frequency in hertz.
+    private final int[] pattern; // The toggle pattern in microseconds to transmit.
+    private int[] oldApiPattern; // The toggle pattern in pulses to transmit.
+    private final String hexCode; // The MwM hex code
 
     /**
-     * Generates the IR toggle pattern from given hex code.
+     * Creates an MahouCode with the given MwM hex code.
      *
-     * @param code   the hex code.
-     * @param addCrc adds CRC calculation. Pass false if code includes the CRC.
+     * @param code the hex code.
      */
-    public EarCode(String code, boolean addCrc) {
-        this(code, addCrc, true);
-    }
+    public MahouCode(String code) {
+        List<Integer> hexList = parseByteValues(code);
 
-    /**
-     * Generates the IR toggle pattern from given hex code.
-     *
-     * @param code   the hex code.
-     * @param addCrc adds CRC calculation. Pass false if code includes the CRC.
-     * @param isNew  the flag to indicate if using Android 4.4.3 or newer.
-     */
-    public EarCode(String code, boolean addCrc, boolean isNew) {
-        List<Integer> patternList;
-
-        patternList = generatePattern(code, addCrc, isNew);
+        hexCode = codeListToString(hexList);
         carrierFrequency = (int) CARRIER_FREQUENCY;
+
+        List<Integer> patternList;
+        patternList = generatePattern(hexCode, true);
         pattern = convertIntegers(patternList);
     }
 
     /**
-     * Gets the carriet frequency.
+     * Converts a list of integers to a hex string.
+     */
+    private static String codeListToString(List<Integer> hexList) {
+        StringBuilder sb = new StringBuilder();
+        for (int item : hexList) {
+            sb.append(String.format("%02X", item));
+            sb.append(' ');
+        }
+
+        return sb.toString().trim();
+    }
+
+    /**
+     * Parses the byte values from the hex code string and returns it as a list of integers.
+     *
+     * @param hexCode The hex code string. Spaces are ignored.
+     * @return List of values of each hex byte.
+     */
+    private static List<Integer> parseByteValues(String hexCode) {
+        List<Integer> result = new ArrayList<>();
+        String codeString = hexCode.replace(" ", "").trim();
+        int size = codeString.length();
+
+        if (size % 2 == 0) {
+            for (String s : getParts(codeString, 2)) {
+                result.add(Integer.parseInt(s, 16));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Split a string into parts by partition size.
+     *
+     * @param string        String to be partitioned
+     * @param partitionSize length of parts
+     * @return list of parts
+     */
+    private static List<String> getParts(String string, int partitionSize) {
+        List<String> parts = new ArrayList<>();
+        int len = string.length();
+        for (int i = 0; i < len; i += partitionSize) {
+            parts.add(string.substring(i, Math.min(len, i + partitionSize)));
+        }
+        return parts;
+    }
+
+    /**
+     * Automatically convert the given code to a 9x code. Do not include CRC.
+     *
+     * @param code9x string without the starting 9X and ending CRC.
+     * @return the full code with the starting 9X and ending CRC.
+     */
+    public static String parse9x(String code9x) {
+        List<Integer> integers = parseByteValues(code9x);
+        integers.add(0, 0x90 - 1 + integers.size());
+        integers.add(calcCrc(integers));
+
+        return codeListToString(integers);
+    }
+
+    /**
+     * Calculates the CRC for the given list of integers.
+     *
+     * @param data The list of integers that represents the hex code
+     * @return The calculated CRC value.
+     */
+    private static int calcCrc(List<Integer> data) {
+        int crc = 0;
+
+        for (int i = 0; i < data.size(); i++) {
+            crc = CRC_TABLE[crc ^ data.get(i)];
+        }
+
+        return crc;
+    }
+
+    /**
+     * Gets the carrier frequency.
      *
      * @return the carrier frequency.
      */
     public int getCarrierFrequency() {
         return carrierFrequency;
+    }
+
+    /**
+     * Gets the hex code.
+     *
+     * @return the hex code.
+     */
+    public String getCode() {
+        return hexCode;
     }
 
     /**
@@ -97,6 +173,19 @@ public class EarCode {
      */
     public int[] getPattern() {
         return pattern;
+    }
+
+    /**
+     * Gets the old API toggle pattern.
+     *
+     * @return the old API toggle pattern.
+     */
+    public int[] getOldApiPattern() {
+        if (oldApiPattern == null) {
+            oldApiPattern = convertIntegers(generatePattern(hexCode, false));
+        }
+
+        return oldApiPattern;
     }
 
     /**
@@ -117,19 +206,16 @@ public class EarCode {
      * Generates the toggle pattern in terms of microseconds if isNew is true; otherwise, in
      * terms of pulse.
      *
-     * @param code   the hex code string.
-     * @param addCrc adds crc calculation if true.
-     * @param isNew  the flag to indicate if using Android 4.4.3 or newer.
+     * @param code  the hex code string.
+     * @param isNew the flag to indicate if generating for Android 4.4.3 or newer.
      * @return the toggle pattern in terms based on isNew.
      */
-    private List<Integer> generatePattern(String code, boolean addCrc, boolean isNew) {
+    private List<Integer> generatePattern(String code, boolean isNew) {
         // If API is new (>= 4.4.3), calculate microseconds per bit, else calculate pulse per bit.
         float multiplier = (isNew) ? (MICROSEC_PER_SEC / BAUD_RATE) : (CARRIER_FREQUENCY / BAUD_RATE);
 
         List<Integer> patternList = new ArrayList<>();
         List<Integer> buffer = parseByteValues(code);
-
-        if (addCrc) buffer.add(calcCrc(buffer));
 
         buffer = toTogglePattern(buffer);
 
@@ -180,65 +266,5 @@ public class EarCode {
         togglePattern.add(count);
 
         return togglePattern;
-    }
-
-    /**
-     * Parses the byte values from the hex code string and returns it as a list of integers.
-     *
-     * @param hexCode The hex code string. Spaces are ignored.
-     * @return List of values of each hex byte.
-     */
-    private List<Integer> parseByteValues(String hexCode) {
-        List<Integer> result = new ArrayList<>();
-        String codeString = hexCode.replace(" ", "").trim();
-        int size = codeString.length();
-
-        if (size % 2 == 0) {
-            for (String s : getParts(codeString, 2)) {
-                result.add(Integer.parseInt(s, 16));
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Split a string into parts by partition size.
-     *
-     * @param string        String to be partitioned
-     * @param partitionSize length of parts
-     * @return list of parts
-     */
-    private List<String> getParts(String string, int partitionSize) {
-        List<String> parts = new ArrayList<String>();
-        int len = string.length();
-        for (int i = 0; i < len; i += partitionSize) {
-            parts.add(string.substring(i, Math.min(len, i + partitionSize)));
-        }
-        return parts;
-    }
-
-    /**
-     * Calculates the CRC for the given list of integers.
-     *
-     * @param data The list of integers that represents the ear code
-     * @return The calculated CRC value.
-     */
-    private int calcCrc(List<Integer> data) {
-        int crc = 0;
-
-        for (int i = 0; i < data.size(); i++) {
-            crc = CRC_TABLE[crc ^ data.get(i)];
-        }
-
-        return crc;
-    }
-
-    public int[] getOldApiPattern() {
-        return new int[0];
-    }
-
-    public String getCode() {
-        return null;
     }
 }
