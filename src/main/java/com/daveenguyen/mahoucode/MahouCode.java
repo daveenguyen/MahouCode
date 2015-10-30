@@ -43,12 +43,11 @@ public class MahouCode {
             0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
     };
 
-    private final float CARRIER_FREQUENCY = 38005f;
+    private static final float CARRIER_FREQUENCY = 38005f; // The IR carrier frequency in hertz.
     private final float BAUD_RATE = 2400f;
     private final float MICROSEC_PER_SEC = 1000000f;
     private final int START_BIT = 0;
     private final int STOP_BIT = 1;
-    private final int carrierFrequency; // The IR carrier frequency in hertz.
     private final int[] pattern; // The toggle pattern in microseconds to transmit.
     private int[] oldApiPattern; // The toggle pattern in pulses to transmit.
     private final String hexCode; // The MwM hex code
@@ -62,7 +61,6 @@ public class MahouCode {
         List<Integer> hexList = parseByteValues(code);
 
         hexCode = codeListToString(hexList);
-        carrierFrequency = (int) CARRIER_FREQUENCY;
 
         List<Integer> patternList;
         patternList = generatePattern(hexCode, true);
@@ -153,8 +151,8 @@ public class MahouCode {
      *
      * @return the carrier frequency.
      */
-    public int getCarrierFrequency() {
-        return carrierFrequency;
+    public static int getCarrierFrequency() {
+        return (int) CARRIER_FREQUENCY;
     }
 
     /**

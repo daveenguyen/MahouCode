@@ -40,8 +40,7 @@ public class MahouCodeTest {
 
     @Test
     public void getCarrierTest() throws Exception {
-        MahouCode code = new MahouCode("90 60 A6");
-        assertThat(code.getCarrierFrequency(), is(equalTo(38005)));
+        assertThat(MahouCode.getCarrierFrequency(), is(equalTo(38005)));
     }
 
     @Test

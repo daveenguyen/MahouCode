@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-  compile 'com.github.daveenguyen:mahoucode:0.1.0'
+  compile 'com.github.daveenguyen:mahoucode:0.1.1'
 }
 ```
 
